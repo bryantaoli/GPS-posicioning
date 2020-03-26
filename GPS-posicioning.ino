@@ -1,6 +1,10 @@
+
 String reply;
+bool pressed = false;
+
 void setup() {
   pinMode(PC13, OUTPUT);
+  pinMode(PA1, INPUT);
   digitalWrite(PC13, HIGH);
   Serial.begin(9600);
   Serial2.begin(115200);
@@ -12,21 +16,29 @@ void setup() {
     set_GPS_settings("gps", "5000", "20");
     Serial.println("Starting setting up MAC...");
     set_MAC_settings("5000");
+    Serial.println("S76Gxb now is on sleep mode...");
   }
   else{
     while(!Serial2.available()){
       UART_error();
     }
+    
   } 
 }
+//--------------------------------------------------------------
 
 void loop() {
-  Serial2.print("---");
-  delay(100);
-  /*reply = Serial2.readString();
-  Serial.println(reply);*/
+  if (analogRead(PA1) == HIGH){
+    pressed = !pressed;
+    Serial.println(pressed);
+    digitalWrite(PC13, LOW);
+  }
+  else{
+    digitalWrite(PC13, HIGH);
+  }
 }
 
+//---------------------------------------------------------------
 void UART_error(){
     digitalWrite(PC13,LOW);
     delay(100);
@@ -94,9 +106,6 @@ void set_GPS_settings(String satellite_mode, String cycle, String port_uplink){
   Serial2.flush();
 }
 
-void get_GPS_location(){
-}
-
 void set_MAC_settings(String interval){
   Serial2.print("mac set_tx_mode cycle");
   Serial.print("mac set_tx_mode cycle");
@@ -133,6 +142,14 @@ void set_MAC_settings(String interval){
   reply = "";
   Serial.flush();
   Serial2.flush();
+}
+
+void get_GPS_location(){
+  Serial2.print("---");
+  Serial.println("---");
+  delay(10);
+  reply = Serial.readString();
+  Serial.println(reply);
 }
 
 bool positiveReply(String reply){
