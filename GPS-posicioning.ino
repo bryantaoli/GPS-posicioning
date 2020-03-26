@@ -5,23 +5,26 @@ void setup() {
   Serial.begin(9600);
   Serial2.begin(115200);
   delay(5000);
-  Serial.println("Starting setting up GPS...");
-  set_GPS_settings("gps", "5000", "20");
+  Serial2.print("sip get_ver");
+  delay(1000);
+  if(Serial2.available()){
+    Serial.println("Starting setting up GPS...");
+    set_GPS_settings("gps", "5000", "20");
+    Serial.println("Starting setting up MAC...");
+    set_MAC_settings("5000");
+  }
+  else{
+    while(!Serial2.available()){
+      UART_error();
+    }
+  } 
 }
 
 void loop() {
-  /*Serial2.print("sip get_hw_model");
+  Serial2.print("---");
   delay(100);
-  bool _ready = Serial2.available();
-  if (_ready){
-    reply = Serial2.readString();
-    Serial.println(reply);
-    UART_reading_blinking();
-  }
-  else{
-    UART_error();
-  }
-  Serial2.flush();*/
+  /*reply = Serial2.readString();
+  Serial.println(reply);*/
 }
 
 void UART_error(){
@@ -79,15 +82,65 @@ void set_GPS_settings(String satellite_mode, String cycle, String port_uplink){
   delay(10);
   reply = Serial2.readString();
   Serial.println(reply);
-  String positiveReply = reply.substring(5,7);
-  Serial.println(positiveReply);
-  if (positiveReply.equalsIgnoreCase("ok")){
+  if (positiveReply(reply)){
     Serial.println("GPS ready");
   }
+  else{
+    Serial.println("Error in GPS settings");
+    UART_error();
+  }
+  reply = "";
   Serial.flush();
   Serial2.flush();
 }
 
 void get_GPS_location(){
-  
+}
+
+void set_MAC_settings(String interval){
+  Serial2.print("mac set_tx_mode cycle");
+  Serial.print("mac set_tx_mode cycle");
+  delay(10);
+  reply = Serial2.readString();
+  Serial.println(reply);
+  Serial2.print("mac set_tx_interval " + interval);
+  Serial.print("mac set_tx_interval " + interval);
+  delay(10);
+  reply = Serial2.readString();
+  Serial.println(reply);
+  Serial2.print("mac set_tx_confirm off");
+  Serial.print("mac set_tx_confirm off");
+  delay(10);
+  reply = Serial2.readString();
+  Serial.println(reply);
+  Serial2.print("mac save");
+  Serial.print("mac save");
+  delay(10);
+  reply = Serial2.readString();
+  Serial.println(reply);
+  if (positiveReply(reply)){
+    Serial.println("MAC ready");
+  }
+  else{
+    Serial.println("error in MAC settings");
+    UART_error();
+  }
+  Serial2.print("sip sleep 604800 uart_on");
+  Serial.print("sip sleep 604800 uart_on");
+  delay(10);
+  reply = Serial.readString();
+  Serial.println(reply);
+  reply = "";
+  Serial.flush();
+  Serial2.flush();
+}
+
+bool positiveReply(String reply){
+  String positiveReply = reply.substring(5, 7);
+  if (positiveReply.equalsIgnoreCase("ok")){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
