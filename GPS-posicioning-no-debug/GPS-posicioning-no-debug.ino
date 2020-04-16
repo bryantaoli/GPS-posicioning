@@ -15,7 +15,6 @@ String mac_setup_commands[] = {"mac set_tx_mode cycle", "mac set_tx_interval 500
 String gps_uplink_commands[] = {"gps sleep off", "gps set_mode auto", "mac join otaa"};
 String sleep_commands[] = {"sip sleep 604800 uart_on","gps set_mode idle", "gps sleep on 0"};
 //---------------------------------------------------------------
-
 void setup()
 {
   delay(5000);
@@ -23,35 +22,30 @@ void setup()
   pinMode(PA7, INPUT);
   digitalWrite(PC13, HIGH);
   Serial2.begin(115200);
-  Serial.begin(9600);
+//----------------------------------------------------------------
+// UART connection cheking
+//----------------------------------------------------------------
   Serial2.print("sip get_ver");
-  Serial.println("vesion:");
   delay(100);
   if(!Serial2.available())
   {
     while(!Serial2.available()){
-      ping(1, 300);
+      ping(1, 100);
     }
   }
   else
   {
-    reply = Serial2.readString();
-    Serial.println(reply);
+    ping(3, 300);
   }
   Serial2.flush();
   reply = "";
-  
-  for (int i = 0; i < sizeof(gps_setup_commands)/sizeof(String); i++)
+//----------------------------------------------------------------
+// If UART ok led will blink fast 3 times -> starting setup
+//---------------------------------------------------------------- 
+  bool check = sent_commands(gps_setup_commands);
+  while(!check)
   {
-    Serial2.print(gps_setup_commands[i]);
-    Serial.println(gps_setup_commands[i]);
-    delay(50);
-    reply = Serial2.readString();
-    Serial.println(reply);
-//    else
-//    {
-//      ping(100, 50);
-//    }
+    ping(1, 100);
   }
 }
 
@@ -85,10 +79,33 @@ void ping(int n, int _delay)
   }
 }
 
-String sent_command(String command)
+boolean sent_commands(String commands[])
 {
-  Serial2.print(command);
-  delay(5);
-  String reply = Serial2.readString();
-  return reply;
+  for (int i = 0; i < sizeof(commands)/sizeof(String); i++)
+  {
+    Serial2.print(commands[i]);
+    delay(50);
+    if (Serial2.available())
+    {
+      reply = Serial.readString();
+      if(positiveReply(reply))
+      {
+        ping(1, 300);
+      }
+      else
+      {
+        ping(50, 100);
+        i = 0;
+      }
+    }
+    else
+    {
+      while(!Serial2.available())
+      {
+        ping(1, 100);
+      }
+      return 0;
+    }
+    return 1;
+  }
 }
