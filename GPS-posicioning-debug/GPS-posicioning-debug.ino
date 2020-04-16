@@ -214,11 +214,11 @@ void get_GPS_location()
   delay(500);
   reply = Serial2.readString();
   Serial.println(reply);
-  //  Serial2.print("mac join otaa");
-  //  Serial.println("mac join otaa");
-  //  delay(500);
-  //  reply = Serial2.readString();
-  //  Serial.println(reply);
+    Serial2.print("mac join otaa");
+    Serial.println("mac join otaa");
+    delay(5000);
+    reply = Serial2.readString();
+    Serial.println(reply);
   //  Serial2.print("gps get_mode");
   //  Serial.println("gps get_mode");
   //  delay(500);
